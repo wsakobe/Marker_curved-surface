@@ -1,68 +1,12 @@
-%曲面交叉点亚像素检测
+%曲面交叉点亚像素�?�?
 %sub-pixel extraction on curved surface
 function ptList = ptCurvedSurface(img, ptList, edge)
     figure;
     imshow(img);
     hold on
-    for it = 1 : size(list,1)
-        cnt1=1;
-        cnt2=1;
-        for maskR = 2:8
-            clear frameOff_x frameOff_y frameSgn frameVal;
-            frameOff_x(1:maskR*2) = -maskR:maskR-1;
-            frameOff_x(maskR*2+1:4*maskR) = maskR*ones(1,maskR*2);
-            frameOff_x(maskR*4+1:6*maskR) = maskR:-1:-maskR+1;
-            frameOff_x(maskR*6+1:8*maskR) = -maskR*ones(1,maskR*2);
-            frameOff_y(1:maskR*2) = -maskR*ones(1,maskR*2);
-            frameOff_y(maskR*2+1:4*maskR) = -maskR:maskR-1;
-            frameOff_y(maskR*4+1:6*maskR) = maskR*ones(1,maskR*2);
-            frameOff_y(maskR*6+1:8*maskR) = maskR:-1:-maskR+1;
-
-            im = list(it,2);
-            in = list(it,1);
-            for i = 1:size(frameOff_x,2)
-                frameVal(i) = img(frameOff_y(i)+in, frameOff_x(i)+im);
-            end
-            frameMean = sum(frameVal)/size(frameOff_x,2);
-            for j = 1:size(frameOff_x,2)
-                if img(frameOff_y(j)+in, frameOff_x(j)+im) > frameMean
-                    frameSgn(j) = 1;
-                else
-                    frameSgn(j) = 0;
-                end
-            end
-            jmpCnt=zeros(2,1);
-            for j = 1:size(frameSgn,2)
-                if j==1 
-                    ib=size(frameSgn,2);
-                else
-                    ib=j-1;
-                end
-                if (frameSgn(ib)~=frameSgn(j))
-                    if jmpCnt(frameSgn(j)+1)<2
-                        jmpIdx(frameSgn(j)+1,jmpCnt(frameSgn(j)+1)+1) = j;
-                    end
-                    jmpCnt(frameSgn(j)+1)=jmpCnt(frameSgn(j)+1)+1;
-                end
-            end
-
-            if (jmpCnt(1)==2) && (jmpCnt(2)==2)
-                juncCur1_x(cnt1)=frameOff_x(1,jmpIdx(1,1))+im;
-                juncCur1_x(cnt1+1)=frameOff_x(1,jmpIdx(1,2))+im;
-                juncCur1_y(cnt1)=frameOff_y(1,jmpIdx(1,1))+in;
-                juncCur1_y(cnt1+1)=frameOff_y(1,jmpIdx(1,2))+in;
-                cnt1=cnt1+2;
-
-                juncCur2_x(cnt2)=frameOff_x(1,jmpIdx(2,1))+im;
-                juncCur2_x(cnt2+1)=frameOff_x(1,jmpIdx(2,2))+im;
-                juncCur2_y(cnt2)=frameOff_y(1,jmpIdx(2,1))+in;
-                juncCur2_y(cnt2+1)=frameOff_y(1,jmpIdx(2,2))+in;
-                cnt2=cnt2+2;
-            else
-                break;
-            end
-        end
-        
+    for it = 1 : size(ptList,1)
+        find(edge(:,1)==ptList(it,1));
+        surroundPoint(it,:) = ptList(edge(:,1)==ptList(it,1));
         %quadratic curve fitting
         if exist('juncCur1_x','var') && size(juncCur1_x,2) > 4 && size(juncCur2_x,2) > 4
             xmin_1=min(juncCur1_x);
