@@ -22,24 +22,24 @@ function [ptList,ledgeList] = ptRefine(img,list,r)
    
     % 基于梯度优化交叉点位置
     % refine cross point locations based on gradient
-    [Gx,Gy] = imgradientxy(img);
-    for iter = 1 : 2
-        for it = 1 : size(list,1)
-            im = round(list(it,1));
-            in = round(list(it,2));
-
-            [M,N] = ndgrid(im-r:im+r,in-r:in+r);
-            Gm = imgaussfilt(Gy(im-r:im+r,in-r:in+r),1);
-            Gn = imgaussfilt(Gx(im-r:im+r,in-r:in+r),1);
-            G = [Gm(:),Gn(:)];
-            p = sum([M(:),N(:)].*G,2);
-            list(it,:) = (G\p)'; %最小二乘利用梯度得亚像素坐标
-        end
+%     [Gx,Gy] = imgradientxy(img);
+%     for iter = 1 : 2
+%         for it = 1 : size(list,1)
+%             im = round(list(it,1));
+%             in = round(list(it,2));
+% 
+%             [M,N] = ndgrid(im-r:im+r,in-r:in+r);
+%             Gm = imgaussfilt(Gy(im-r:im+r,in-r:in+r),1);
+%             Gn = imgaussfilt(Gx(im-r:im+r,in-r:in+r),1);
+%             G = [Gm(:),Gn(:)];
+%             p = sum([M(:),N(:)].*G,2);
+%             list(it,:) = (G\p)'; %最小二乘利用梯度得亚像素坐标
+%         end
         % 清除靠近边界的点
         % remove the detected points near boundaries
         illegal = (any(list<r+2,2) | list(:,1)>size(img,1)-r-2 | list(:,2)>size(img,2)-r-2);
         list(illegal,:)=[];
-    end
+%     end
 
     % 基于超平面模型（二元二次方程）计算脊的朝向
     % 基于脊的朝向生成标准模板, 计算相关度以排除假阳性检测
