@@ -1,4 +1,3 @@
-%曲面交叉点亚像素�?�?
 %sub-pixel extraction on curved surface
 function ptList = ptCurvedSurface(img, ptList, edge)
     figure;
@@ -7,6 +6,10 @@ function ptList = ptCurvedSurface(img, ptList, edge)
 %     surroundPoint = zeros(size(ptList,1),4);
     for it = 1 : size(ptList,1)
         neighbors = [edge(edge(:,2)==it,1)' edge(edge(:,1)==it,2)'];
+        juncCur1_x = [];
+        juncCur1_y = [];
+        juncCur2_x = [];
+        juncCur2_y = [];
 %         surroundPoint(it,1:size(neighbors,2)) = neighbors;
         for j = 1 : size(neighbors,2)
             if ptList(neighbors(j),1) < ptList(it,1)
@@ -19,9 +22,9 @@ function ptList = ptCurvedSurface(img, ptList, edge)
             else
                 y_dir = -1;
             end
-            x_divide = round(linspace(min(ptList(neighbors(j),1),ptList(it,1)),max(ptList(neighbors(j),1),ptList(it,1)),5));
-            y_divide = round(linspace(min(ptList(neighbors(j),2),ptList(it,2)),max(ptList(neighbors(j),2),ptList(it,2)),5));
-            for k = 1 : size(x_divide,2)
+            x_divide = round(linspace(ptList(neighbors(j),1),ptList(it,1),7));
+            y_divide = round(linspace(ptList(neighbors(j),2),ptList(it,2),7));
+            for k = 2 : size(x_divide,2) - 1
                 stdPixel_x = img(x_divide(k),y_divide(k));
                 stdPixel_y = img(x_divide(k),y_divide(k));
                 changeCnt_x = 0;
@@ -30,32 +33,33 @@ function ptList = ptCurvedSurface(img, ptList, edge)
                 while changeCnt_x < 3 && changeCnt_y < 3
                     nowPixel_x = img(x_divide(k) + x_dir * cnt, y_divide(k));
                     nowPixel_y = img(x_divide(k), y_divide(k) + y_dir * cnt);
-                    if abs(nowPixel_x - stdPixel_x) > 0.3
+                    if abs(nowPixel_x - stdPixel_x) > 0.15
                         changeCnt_x = changeCnt_x + 1;
                     else
                         changeCnt_x = 0;
                     end
-                    if abs(nowPixel_y - stdPixel_y) > 0.3
+                    if abs(nowPixel_y - stdPixel_y) > 0.15
                         changeCnt_y = changeCnt_y + 1;
                     else
                         changeCnt_y = 0;
                     end
+                    cnt = cnt + 1;  
                 end
                 if changeCnt_x == 3 
                     if nowPixel_x > stdPixel_x
-                        juncCur1_x = [juncCur1_x; x_divide(k) + x_dir * (cnt - 3)];
+                        juncCur1_x = [juncCur1_x; x_divide(k) + x_dir * (cnt - 3) - 10 + sigmoidFit(img(x_divide(k)+x_dir*(cnt-3)-10:x_divide(k)+x_dir*(cnt-3)+10)),y_divide(k)];
                         juncCur1_y = [juncCur1_y; y_divide(k)];
                     else
-                        juncCur2_x = [juncCur2_x; x_divide(k) + x_dir * (cnt - 3)];
+                        juncCur2_x = [juncCur2_x; x_divide(k) + x_dir * (cnt - 3) - 10 + sigmoidFit(img(x_divide(k)+x_dir*(cnt-3)-10:x_divide(k)+x_dir*(cnt-3)+10)),y_divide(k)];
                         juncCur2_y = [juncCur2_y; y_divide(k)];
                     end
                 else
                     if nowPixel_x > stdPixel_x
                         juncCur1_x = [juncCur1_x; x_divide(k)];
-                        juncCur1_y = [juncCur1_y; y_divide(k) + y_dir * (cnt - 3)];
+                        juncCur1_y = [juncCur1_y; y_divide(k) + y_dir * (cnt - 3) - 10 + sigmoidFit(img(x_divide(k),y_divide(k)+y_dir*(cnt-3)-10:y_divide(k)+y_dir*(cnt-3)+10))];
                     else
                         juncCur2_x = [juncCur2_x; x_divide(k)];
-                        juncCur2_y = [juncCur2_y; y_divide(k) + y_dir * (cnt - 3)];
+                        juncCur2_y = [juncCur2_y; y_divide(k) + y_dir * (cnt - 3) - 10 + sigmoidFit(img(x_divide(k),y_divide(k)+y_dir*(cnt-3)-10:y_divide(k)+y_dir*(cnt-3)+10))];
                     end
                 end
             end   
@@ -98,4 +102,11 @@ function ptList = ptCurvedSurface(img, ptList, edge)
             scatter(x_sub, y_sub, 50,'r','filled','o','LineWidth',1);
         end
     end
+end
+
+function subpixel = sigmoidFit(Input)
+    fun = @(x,xdata)x(1)./(1+exp(-1*(xdata-x(2))/x(3)))+x(4);
+    x0=[0.8 size(Input,2)/2 2 0.2];
+    coe = lsqcurvefit(fun, x0, 1:size(Input,2), Input);
+    subpixel = coe(2);
 end
