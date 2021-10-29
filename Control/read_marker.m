@@ -44,7 +44,7 @@ function [ptList,edge] = read_marker(img,sta,r,expectN,sigma)
     ptList = preFilter(img,r,expectN,sigma);
     [ptList,ledge] = ptRefine(img,ptList,r);
     [array,edge] = ptStruct(ptList,ledge);
-    ptList = ptCurvedSurface(img,ptList,edge);
+    ptList = ptCurvedSurface(img,ptList,array);
     ptList = ptIdentify(img,sta,array,ptList);
     
 end
