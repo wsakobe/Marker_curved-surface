@@ -45,7 +45,7 @@ function [array,E] = ptStruct(ptList,ledge)
                             abs(angdiff(dirB,ledge_B(2)+pi))]);
         % 贴合角度不低于15°
         % the included angle should not be larger than 15°
-        min_rad = deg2rad(25);
+        min_rad = deg2rad(15);
         if ledge_diff > min_rad || ledge_A_diff > min_rad || ledge_B_diff >min_rad
            E_unmatched(e) = true;
         end
@@ -59,7 +59,7 @@ function [array,E] = ptStruct(ptList,ledge)
     E(:,4) = realmax;
     E(:,5) = ones(size(E,1),1);
     for it = 1 : size(E,1)
-        if E(it,3) > 2.5*E(it,4)
+        if E(it,3) > 1.5*E(it,4)
             % 长边不得长于短边的1.5倍
             % long edge should not be the 1.5x (or more) of short edge
             E(it,5) = 0;

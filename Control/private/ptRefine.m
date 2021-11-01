@@ -35,8 +35,8 @@ function [ptList,ledgeList] = ptRefine(img,list,r)
 %             p = sum([M(:),N(:)].*G,2);
 %             list(it,:) = (G\p)'; %最小二乘利用梯度得亚像素坐标
 %         end
-        % 清除靠近边界的点
-        % remove the detected points near boundaries
+%         % 清除靠近边界的点
+%         % remove the detected points near boundaries
         illegal = (any(list<r+2,2) | list(:,1)>size(img,1)-r-2 | list(:,2)>size(img,2)-r-2);
         list(illegal,:)=[];
 %     end
