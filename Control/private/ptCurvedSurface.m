@@ -2,6 +2,7 @@
 function ptList = ptCurvedSurface(img, ptList, array)
     figure;
     neighbors = zeros(size(ptList,1),4);
+    sample_width = 20;
     global coeff_1
     global coeff_2
     for it = 1 : size(array,1)
@@ -31,56 +32,31 @@ function ptList = ptCurvedSurface(img, ptList, array)
                     if neighbors(nowPoint,j) == 0 
                         continue;
                     end
-                    if ptList(neighbors(nowPoint,j),1) < ptList(nowPoint,1)
-                        x_dir = 1;
-                    else
-                        x_dir = -1;
-                    end
-                    if ptList(neighbors(nowPoint,j),2) < ptList(nowPoint,2)
-                        y_dir = 1;
-                    else
-                        y_dir = -1;
-                    end
-                    x_divide = round(linspace(ptList(neighbors(nowPoint,j),1),ptList(nowPoint,1),7));
-                    y_divide = round(linspace(ptList(neighbors(nowPoint,j),2),ptList(nowPoint,2),7));
+                    x_divide = round(linspace(ptList(neighbors(nowPoint,j),1),ptList(nowPoint,1),9));
+                    y_divide = round(linspace(ptList(neighbors(nowPoint,j),2),ptList(nowPoint,2),9));
                     for k = 2 : size(x_divide,2) - 2
-                        stdPixel_x = img(x_divide(k),y_divide(k));
-                        stdPixel_y = img(x_divide(k),y_divide(k));
-                        changeCnt_x = 0;
-                        changeCnt_y = 0;
-                        cnt = 1;
-                        while changeCnt_x < 3 && changeCnt_y < 3 && cnt < 50
-                            nowPixel_x = img(x_divide(k) + x_dir * cnt, y_divide(k));
-                            nowPixel_y = img(x_divide(k), y_divide(k) + y_dir * cnt);
-                            if abs(nowPixel_x - stdPixel_x) > 0.15
-                                changeCnt_x = changeCnt_x + 1;
-                            else
-                                changeCnt_x = 0;
-                            end
-                            if abs(nowPixel_y - stdPixel_y) > 0.15
-                                changeCnt_y = changeCnt_y + 1;
-                            else
-                                changeCnt_y = 0;
-                            end
-                            cnt = cnt + 1;  
-                        end
-                        if changeCnt_x == 3 
-                            if j < 3
-                                juncCur1_x = [juncCur1_x; x_divide(k) + x_dir * (cnt - 5) - 10 + sigmoidFit(img(x_divide(k)+x_dir*(cnt-5)-10:x_divide(k)+x_dir*(cnt-5)+10,y_divide(k))')];
-                                juncCur1_y = [juncCur1_y; y_divide(k)];
-                            else
-                                juncCur2_x = [juncCur2_x; x_divide(k) + x_dir * (cnt - 5) - 10 + sigmoidFit(img(x_divide(k)+x_dir*(cnt-5)-10:x_divide(k)+x_dir*(cnt-5)+10,y_divide(k))')];
-                                juncCur2_y = [juncCur2_y; y_divide(k)];
+                        sub_x = sample_width;
+                        sub_y = sample_width;
+                        if abs(ptList(nowPoint,1)-ptList(neighbors(nowPoint,j),1)) > abs(ptList(nowPoint,2)-ptList(neighbors(nowPoint,j),2))
+                            [sub_y,score] = sigmoidFit(img(x_divide(k),y_divide(k)-sample_width:y_divide(k)+sample_width));
+                            if sub_y > sample_width * 2
+                                continue;
                             end
                         else
-                            if j < 3
-                                juncCur1_x = [juncCur1_x; x_divide(k)];
-                                juncCur1_y = [juncCur1_y; y_divide(k) + y_dir * (cnt - 5) - 10 + sigmoidFit(img(x_divide(k),y_divide(k)+y_dir*(cnt-5)-10:y_divide(k)+y_dir*(cnt-5)+10))];
-                            else
-                                juncCur2_x = [juncCur2_x; x_divide(k)];
-                                juncCur2_y = [juncCur2_y; y_divide(k) + y_dir * (cnt - 5) - 10 + sigmoidFit(img(x_divide(k),y_divide(k)+y_dir*(cnt-5)-10:y_divide(k)+y_dir*(cnt-5)+10))];
+                            [sub_x,score] = sigmoidFit(img(x_divide(k)-sample_width:x_divide(k)+sample_width,y_divide(k))');
+                            if sub_x > sample_width * 2
+                                continue;
                             end
                         end
+                        if j<3
+                            juncCur1_x = [juncCur1_x; x_divide(k) - sample_width + sub_x];
+                            juncCur1_y = [juncCur1_y; y_divide(k) - sample_width + sub_y];
+                        else
+                            juncCur2_x = [juncCur2_x; x_divide(k) - sample_width + sub_x];
+                            juncCur2_y = [juncCur2_y; y_divide(k) - sample_width + sub_y];
+                        end
+                        x_divide=x_divide+round(sub_x)-sample_width;
+                        y_divide=y_divide+round(sub_y)-sample_width;
                     end   
                 end
                 hold off
@@ -119,17 +95,22 @@ function ptList = ptCurvedSurface(img, ptList, array)
     end
 end
 
-function subpixel = sigmoidFit(Input)
+function [subpixel, peak, width] = sigmoidFit(Input)
+    min_peak = 0.2; %折扣因子
+    max_width = 5;
     fun = @(x,xdata)x(1)./(1+exp(-1*(xdata-x(2))/x(3)))+x(4);
     x0=[0.8 size(Input,2)/2 2 0.2];
     coe = lsqcurvefit(fun, x0, 1:size(Input,2), Input);
     subpixel = coe(2);
-%     
-%     figure
-%     plot(1:size(Input,2),Input);
-%     hold on
-%     y=fun(coe,1:0.01:size(Input,2));
-%     plot(1:0.01:size(Input,2),y);
+    peak = coe(1);
+    width = coe(3);
+    
+    figure(3)
+    hold off
+    plot(1:size(Input,2),Input);
+    hold on
+    y=fun(coe,1:0.01:size(Input,2));
+    plot(1:0.01:size(Input,2),y);
 end
 
 function z=mfun2(x,y)
