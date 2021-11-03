@@ -32,31 +32,33 @@ function ptList = ptCurvedSurface(img, ptList, array)
                     if neighbors(nowPoint,j) == 0 
                         continue;
                     end
-                    x_divide = round(linspace(ptList(neighbors(nowPoint,j),1),ptList(nowPoint,1),9));
-                    y_divide = round(linspace(ptList(neighbors(nowPoint,j),2),ptList(nowPoint,2),9));
-                    for k = 2 : size(x_divide,2) - 2
+                    bias_x=0;
+                    bias_y=0;
+                    x_divide = round(linspace(ptList(neighbors(nowPoint,j),1),ptList(nowPoint,1),11));
+                    y_divide = round(linspace(ptList(neighbors(nowPoint,j),2),ptList(nowPoint,2),11));
+                    for k = 2 : size(x_divide,2) - 1
                         sub_x = sample_width;
                         sub_y = sample_width;
                         if abs(ptList(nowPoint,1)-ptList(neighbors(nowPoint,j),1)) > abs(ptList(nowPoint,2)-ptList(neighbors(nowPoint,j),2))
-                            [sub_y,score] = sigmoidFit(img(x_divide(k),y_divide(k)-sample_width:y_divide(k)+sample_width));
+                            [sub_y,score] = sigmoidFit(img(x_divide(k),y_divide(k)-sample_width+bias_y:y_divide(k)+sample_width+bias_y));
                             if sub_y > sample_width * 2
                                 continue;
                             end
                         else
-                            [sub_x,score] = sigmoidFit(img(x_divide(k)-sample_width:x_divide(k)+sample_width,y_divide(k))');
+                            [sub_x,score] = sigmoidFit(img(x_divide(k)-sample_width+bias_x:x_divide(k)+sample_width+bias_x,y_divide(k))');
                             if sub_x > sample_width * 2
                                 continue;
                             end
                         end
                         if j<3
-                            juncCur1_x = [juncCur1_x; x_divide(k) - sample_width + sub_x];
-                            juncCur1_y = [juncCur1_y; y_divide(k) - sample_width + sub_y];
+                            juncCur1_x = [juncCur1_x; x_divide(k) - sample_width + sub_x + bias_x - 1];
+                            juncCur1_y = [juncCur1_y; y_divide(k) - sample_width + sub_y + bias_y - 1];
                         else
-                            juncCur2_x = [juncCur2_x; x_divide(k) - sample_width + sub_x];
-                            juncCur2_y = [juncCur2_y; y_divide(k) - sample_width + sub_y];
+                            juncCur2_x = [juncCur2_x; x_divide(k) - sample_width + sub_x + bias_x - 1];
+                            juncCur2_y = [juncCur2_y; y_divide(k) - sample_width + sub_y + bias_y - 1];
                         end
-                        x_divide=x_divide+round(sub_x)-sample_width;
-                        y_divide=y_divide+round(sub_y)-sample_width;
+                        bias_x=bias_x+round(sub_x)-sample_width;
+                        bias_y=bias_y+round(sub_y)-sample_width;
                     end   
                 end
                 hold off
@@ -85,8 +87,10 @@ function ptList = ptCurvedSurface(img, ptList, array)
                     [solx, soly] = solve(eqns, [x y]);
                     solx = real(double(solx));
                     soly = real(double(soly));
-                    x_sub = solx(abs(solx-ptList(nowPoint,2))==min(abs(solx-ptList(nowPoint,2))));
-                    y_sub = soly(abs(soly-ptList(nowPoint,1))==min(abs(soly-ptList(nowPoint,1))));
+                    err=(solx-ptList(nowPoint,2)).^2+(soly-ptList(nowPoint,1)).^2;
+                    [~,pos]=min(err);
+                    x_sub=solx(pos);
+                    y_sub=soly(pos);
                     ptList(nowPoint,:) = [y_sub(1) x_sub(1)];
                     scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1);
                 end
