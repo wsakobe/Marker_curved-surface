@@ -36,11 +36,9 @@ function ptList = preFilter(img,r,expectN,sigma)
     % 非极大值抑制
     % Non-maximum suppression    
     G(imdilate(G,strel('square',3))~=G)=0;%取3x3邻域中最大值 判断当前值是否为最大值
-    
-    figure;
-    imshow(G);
-    hold on;
-    
+    G(G(:,:)>0.8)=1;
+    figure
+    imshow(G)
     % 挑选"expectN"个"G"值最高的点
     % Pick the candidates with top-"expectN" "G" value
     G(1:r,:) = 0; G(end-r+1:end,:) = 0;

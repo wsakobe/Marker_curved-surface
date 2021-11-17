@@ -7,7 +7,7 @@
 %   Nx1 cell, each one corresponds to a connected grid, representing a
 %   point grid based on their indexes in "ptList" (unavailable elements are NaN).
 
-function [array,E] = ptStruct(ptList,ledge)
+function [array,E] = ptStruct(img,ptList,ledge)
 
     if size(ptList,1)<3
         array = [];
@@ -23,6 +23,10 @@ function [array,E] = ptStruct(ptList,ledge)
         
     E = edges(triangulation(cnt,pts));
     E_unmatched = false(size(E,1),1);
+%     figure
+%     imshow(img);
+%     hold on
+%     triplot(triangulation(cnt,pts),'LineWidth',2,'Color','y');
     for e = 1 : size(E,1)
         ledge_A = deg2rad(ledge(E(e,1),:));
         ledge_B = deg2rad(ledge(E(e,2),:));
@@ -77,6 +81,7 @@ function [array,E] = ptStruct(ptList,ledge)
         array = [];
         return;
     end
+    
     
     %% 传递方向体, 组织矩阵
     % propagation the compass to organize grids

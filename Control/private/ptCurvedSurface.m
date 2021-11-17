@@ -69,30 +69,24 @@ function ptList = ptCurvedSurface(img, ptList, array)
                 
                 %quadratic curve fitting
                 if exist('juncCur1_x','var') && size(juncCur1_x,1) > 4 && size(juncCur2_x,1) > 4
-                    A_1=[juncCur1_y.^2 juncCur1_x.*juncCur1_y juncCur1_x.^2 juncCur1_y juncCur1_x];
-                    A_1=reshape(A_1,size(juncCur1_x,1),5);
-                    B_1=-1*ones(size(juncCur1_x,1),1);
-                    coeff_1=A_1\B_1;
-                    fimplicit(@mfun1,[min(juncCur1_y) max(juncCur1_y) min(juncCur1_x) max(juncCur1_x)],'-r','LineWidth',1.5);
-
-                    A_2=[juncCur2_y.^2 juncCur2_x.*juncCur2_y juncCur2_x.^2 juncCur2_y juncCur2_x];
-                    A_2=reshape(A_2,size(juncCur2_x,1),5);
-                    B_2=-1*ones(size(juncCur2_x,1),1);
-                    coeff_2=A_2\B_2;
-                    fimplicit(@mfun2,[min(juncCur2_y) max(juncCur2_y) min(juncCur2_x) max(juncCur2_x)],'-y','LineWidth',1.5);
+                    coeff_1=fit_ellipse(juncCur1_y, juncCur1_x);
+                    fimplicit(@mfun1,[min(juncCur1_y)-10 max(juncCur1_y)+10 min(juncCur1_x)-10 max(juncCur1_x)+10],'-r','LineWidth',1.5);
+                    
+                    coeff_2=fit_ellipse(juncCur2_y, juncCur2_x);
+                    fimplicit(@mfun2,[min(juncCur2_y)-10 max(juncCur2_y)+10 min(juncCur2_x)-10 max(juncCur2_x)+10],'-y','LineWidth',1.5);
 
                     %solve the intersection points of the two quadratic curves
-                    syms x y
-                    eqns = [coeff_1(1)*x^2+coeff_1(2)*x*y+coeff_1(3)*y^2+coeff_1(4)*x+coeff_1(5)*y+1==0, coeff_2(1)*x^2+coeff_2(2)*x*y+coeff_2(3)*y^2+coeff_2(4)*x+coeff_2(5)*y+1==0];
-                    [solx, soly] = solve(eqns, [x y]);
-                    solx = real(double(solx));
-                    soly = real(double(soly));
-                    err=(solx-ptList(nowPoint,2)).^2+(soly-ptList(nowPoint,1)).^2;
-                    [~,pos]=min(err);
-                    x_sub=solx(pos);
-                    y_sub=soly(pos);
-                    ptList(nowPoint,:) = [y_sub(1) x_sub(1)];
-                    scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1);
+%                     syms x y
+%                     eqns = [coeff_1(1)*x^2+coeff_1(2)*x*y+coeff_1(3)*y^2+coeff_1(4)*x+coeff_1(5)*y+1==0, coeff_2(1)*x^2+coeff_2(2)*x*y+coeff_2(3)*y^2+coeff_2(4)*x+coeff_2(5)*y+1==0];
+%                     [solx, soly] = solve(eqns, [x y]);
+%                     solx = real(double(solx));
+%                     soly = real(double(soly));
+%                     err=(solx-ptList(nowPoint,2)).^2+(soly-ptList(nowPoint,1)).^2;
+%                     [~,pos]=min(err);
+%                     x_sub=solx(pos);
+%                     y_sub=soly(pos);
+%                     ptList_refined(nowPoint,:) = [y_sub(1) x_sub(1)];
+%                     scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1);
                 end
             end
         end
@@ -111,18 +105,42 @@ function [subpixel, peak, width] = sigmoidFit(Input)
     
     figure(3)
     hold off
-    plot(1:size(Input,2),Input);
+    plot(1:size(Input,2),Input,'*');
     hold on
     y=fun(coe,1:0.01:size(Input,2));
-    plot(1:0.01:size(Input,2),y);
+    plot(1:0.01:size(Input,2),y,'LineWidth',2);
 end
 
 function z=mfun2(x,y)
     global coeff_2
-    z = coeff_2(1).*x.^2 + coeff_2(2).*x.*y + coeff_2(3).*y.^2 + coeff_2(4).*x + coeff_2(5).*y + 1;
+    z = coeff_2(1).*x.^2 + coeff_2(2).*x.*y + coeff_2(3).*y.^2 + coeff_2(4).*x + coeff_2(5).*y + coeff_2(6);
 end
 
 function z=mfun1(x,y)
     global coeff_1
-    z = coeff_1(1).*x.^2 + coeff_1(2).*x.*y + coeff_1(3).*y.^2 + coeff_1(4).*x + coeff_1(5).*y + 1;
+    z = coeff_1(1).*x.^2 + coeff_1(2).*x.*y + coeff_1(3).*y.^2 + coeff_1(4).*x + coeff_1(5).*y + coeff_1(6);
+end
+
+function a = fit_ellipse(x, y)
+    D1 = [x.^2, x.*y, y.^2]; % quadratic part of the design matrix
+    D2 = [x, y, ones(size(x))]; % linear part of the design matrix
+    S1 = D1'* D1; % quadratic part of the scatter matrix
+    S2 = D1'* D2; % combined part of the scatter matrix
+    S3 = D2'* D2; % linear part of the scatter matrix
+    T = - inv(S3) * S2'; % for getting a2 from a1
+
+    M = S1 + S2 * T; % reduced scatter matrix
+    M = [M(3, :) ./ 2; - M(2, :); M(1, :) ./ 2]; % premultiply by inv(C1)
+    [evec, eval] = eig(M); % solve eigensystem
+
+    cond = 4 * evec(1, :) .* evec(3, :) - evec(2, :).^2; % evaluate a’Ca
+    a1 = evec(:, cond > 0); % eigenvector for min. pos. eigenvalue
+    a = [a1; T * a1]; % ellipse coefficients
+    if ~isreal(a)
+        a=zeros(6,1);
+        coeff_line = polyfit(x, y, 1);
+        a(4)=-coeff_line(1);
+        a(5)=1;
+        a(6)=-coeff_line(2);
+    end
 end

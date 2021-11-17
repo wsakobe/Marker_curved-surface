@@ -28,6 +28,7 @@ expectN = 2*(size(sta,1)+1)*(size(sta,2)+1);
 %% 显示
 % display
 figure;
+set(gcf,'unit', 'centimeters','position',[8 , 6, 8, 6])
 imshow(img);
 hold on;
 % 绘制边 draw edges
@@ -35,10 +36,10 @@ Y = ptList(:,1);
 X = ptList(:,2);
 plot(X(edge'),Y(edge'),'LineWidth',3,'Color','g');
 % 绘制点 draw dots
-scatter(ptList(:,2),ptList(:,1),50,'g','filled','o','LineWidth',1);
+scatter(ptList(:,2),ptList(:,1),20,'b','filled','o','LineWidth',1);
 % 绘制不确定ID的点 draw unsure IDs
-% pt_uID = ptList(isnan(ptList(:,3)),:);
-% scatter(pt_uID(:,2),pt_uID(:,1),100,'r','x','LineWidth',3);
+pt_uID = ptList(isnan(ptList(:,3)),:);
+scatter(pt_uID(:,2),pt_uID(:,1),100,'r','x','LineWidth',3);
 % 绘制ID draw IDs
-% pt_ID = ptList(~isnan(ptList(:,3)),:);
-% text(pt_ID(:,2),pt_ID(:,1),num2str(pt_ID(:,3)),'FontSize',10,'Color','y');
+pt_ID = ptList(~isnan(ptList(:,3)),:);
+text(pt_ID(:,2)+3,pt_ID(:,1)-15,num2str(pt_ID(:,3)),'FontSize',10,'Color','y');
