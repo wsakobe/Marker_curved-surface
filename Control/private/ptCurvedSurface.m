@@ -103,12 +103,12 @@ function [subpixel, peak, width] = sigmoidFit(Input)
     peak = coe(1);
     width = coe(3);
     
-    figure(3)
-    hold off
-    plot(1:size(Input,2),Input,'*');
-    hold on
-    y=fun(coe,1:0.01:size(Input,2));
-    plot(1:0.01:size(Input,2),y,'LineWidth',2);
+%     figure(3)
+%     hold off
+%     plot(1:size(Input,2),Input,'*');
+%     hold on
+%     y=fun(coe,1:0.01:size(Input,2));
+%     plot(1:0.01:size(Input,2),y,'LineWidth',2);
 end
 
 function z=mfun2(x,y)

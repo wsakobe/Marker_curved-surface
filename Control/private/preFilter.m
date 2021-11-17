@@ -38,7 +38,9 @@ function ptList = preFilter(img,r,expectN,sigma)
     G(imdilate(G,strel('square',3))~=G)=0;%取3x3邻域中最大值 判断当前值是否为最大值
     G(G(:,:)>0.8)=1;
     figure
-    imshow(G)
+    imshow(img)
+    hold on
+    
     % 挑选"expectN"个"G"值最高的点
     % Pick the candidates with top-"expectN" "G" value
     G(1:r,:) = 0; G(end-r+1:end,:) = 0;
@@ -47,5 +49,5 @@ function ptList = preFilter(img,r,expectN,sigma)
     G_sort = sort(G_sort,'descend');
     [im,in] = ind2sub(size(G),find(G>=G_sort(min(expectN,size(G_sort,1)))));
     ptList = [im,in];
-    
+    scatter(in,im,20,'filled');
 end
