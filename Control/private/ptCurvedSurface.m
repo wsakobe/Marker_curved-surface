@@ -1,6 +1,7 @@
 %sub-pixel extraction on curved surface
 function ptList = ptCurvedSurface(img, ptList, array)
     figure;
+    imshow(img);
     neighbors = zeros(size(ptList,1),4);
     sample_width = 20;
     global coeff_1
@@ -61,20 +62,19 @@ function ptList = ptCurvedSurface(img, ptList, array)
                         bias_y=bias_y+round(sub_y)-sample_width;
                     end   
                 end
-                hold off
-                imshow(img);
                 hold on
                 scatter(juncCur2_y,juncCur2_x,10,'g','filled');
                 scatter(juncCur1_y,juncCur1_x,10,'b','filled');
                 
                 %quadratic curve fitting
                 if exist('juncCur1_x','var') && size(juncCur1_x,1) > 4 && size(juncCur2_x,1) > 4
+                    hold on
                     coeff_1=fit_ellipse(juncCur1_y, juncCur1_x);
-                    fimplicit(@mfun1,[min(juncCur1_y)-10 max(juncCur1_y)+10 min(juncCur1_x)-10 max(juncCur1_x)+10],'-r','LineWidth',1.5);
+                    fimplicit(@mfun1,[min(juncCur1_y)-100 max(juncCur1_y)+100 min(juncCur1_x)-100 max(juncCur1_x)+100],'-r','LineWidth',1.5);
                     
                     coeff_2=fit_ellipse(juncCur2_y, juncCur2_x);
-                    fimplicit(@mfun2,[min(juncCur2_y)-10 max(juncCur2_y)+10 min(juncCur2_x)-10 max(juncCur2_x)+10],'-y','LineWidth',1.5);
-
+                    fimplicit(@mfun2,[min(juncCur2_y)-100 max(juncCur2_y)+100 min(juncCur2_x)-100 max(juncCur2_x)+100],'-y','LineWidth',1.5);
+                    
                     %solve the intersection points of the two quadratic curves
 %                     syms x y
 %                     eqns = [coeff_1(1)*x^2+coeff_1(2)*x*y+coeff_1(3)*y^2+coeff_1(4)*x+coeff_1(5)*y+1==0, coeff_2(1)*x^2+coeff_2(2)*x*y+coeff_2(3)*y^2+coeff_2(4)*x+coeff_2(5)*y+1==0];
@@ -98,7 +98,10 @@ function [subpixel, peak, width] = sigmoidFit(Input)
     max_width = 5;
     fun = @(x,xdata)x(1)./(1+exp(-1*(xdata-x(2))/x(3)))+x(4);
     x0=[0.8 size(Input,2)/2 2 0.2];
-    coe = lsqcurvefit(fun, x0, 1:size(Input,2), Input);
+    options = optimoptions('lsqcurvefit','Algorithm','levenberg-marquardt','Display','none');
+    lb = [];    
+    ub = [];
+    coe = lsqcurvefit(fun, x0, 1:size(Input,2), Input, lb, ub, options);
     subpixel = coe(2);
     peak = coe(1);
     width = coe(3);

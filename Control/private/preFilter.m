@@ -36,10 +36,15 @@ function ptList = preFilter(img,r,expectN,sigma)
     % 非极大值抑制
     % Non-maximum suppression    
     G(imdilate(G,strel('square',3))~=G)=0;%取3x3邻域中最大值 判断当前值是否为最大值
-    G(G(:,:)>0.8)=1;
-    figure
-    imshow(img)
-    hold on
+    
+    img_gauss = imgaussfilt(img, 3);
+    [Gx,Gy] = imgradientxy(img_gauss);
+    [Gxx,Gxy] = imgradientxy(Gx);
+    [Gyx,Gyy] = imgradientxy(Gy);
+    G = Gxy.*Gyx - Gxx.*Gyy;
+    % 非极大值抑制
+    % Non-maximum suppression    
+    G(imdilate(G,strel('square',10))~=G)=0;%取3x3邻域中最大值 判断当前值是否为最大值
     
     % 挑选"expectN"个"G"值最高的点
     % Pick the candidates with top-"expectN" "G" value
@@ -49,5 +54,8 @@ function ptList = preFilter(img,r,expectN,sigma)
     G_sort = sort(G_sort,'descend');
     [im,in] = ind2sub(size(G),find(G>=G_sort(min(expectN,size(G_sort,1)))));
     ptList = [im,in];
-    scatter(in,im,20,'filled');
+%     figure
+%     imshow(img);
+%     hold on
+%     scatter(in,im,20,'g','filled');
 end

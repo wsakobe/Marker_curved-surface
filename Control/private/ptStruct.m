@@ -23,10 +23,10 @@ function [array,E] = ptStruct(img,ptList,ledge)
         
     E = edges(triangulation(cnt,pts));
     E_unmatched = false(size(E,1),1);
-%     figure
-%     imshow(img);
-%     hold on
-%     triplot(triangulation(cnt,pts),'LineWidth',2,'Color','y');
+    figure
+    imshow(img);
+    hold on
+    triplot(triangulation(cnt,pts),'LineWidth',2,'Color','y');
     for e = 1 : size(E,1)
         ledge_A = deg2rad(ledge(E(e,1),:));
         ledge_B = deg2rad(ledge(E(e,2),:));
@@ -63,7 +63,7 @@ function [array,E] = ptStruct(img,ptList,ledge)
     E(:,4) = realmax;
     E(:,5) = ones(size(E,1),1);
     for it = 1 : size(E,1)
-        if E(it,3) > 2.5*E(it,4)
+        if E(it,3) > 2*E(it,4)
             % 长边不得长于短边的1.5倍
             % long edge should not be the 1.5x (or more) of short edge
             E(it,5) = 0;

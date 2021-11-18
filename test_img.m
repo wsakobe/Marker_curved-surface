@@ -28,7 +28,6 @@ expectN = 2*(size(sta,1)+1)*(size(sta,2)+1);
 %% œ‘ æ
 % display
 figure;
-set(gcf,'unit', 'centimeters','position',[8 , 6, 8, 6])
 imshow(img);
 hold on;
 % ªÊ÷∆±ﬂ draw edges
