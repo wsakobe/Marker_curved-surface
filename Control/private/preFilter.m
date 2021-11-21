@@ -28,14 +28,14 @@ function ptList = preFilter(img,r,expectN,sigma)
     % "G" 表示在向量和中相互抵消的梯度的总模量, 在对比度高且对称的图案(交叉点)附近较高.
     % "G" is the power of the cancelled out gradients, which is large near
     % high contrast and symmetric patterns (cross point).
-    [Gx,Gy] = imgradientxy(img);
-    
-    Gpow = imgaussfilt((Gx.^2+Gy.^2).^0.5,sigma);
-    Gsum = (imgaussfilt(Gx,sigma).^2 + imgaussfilt(Gy,sigma).^2).^0.5;
-    G = Gpow-Gsum;
-    % 非极大值抑制
-    % Non-maximum suppression    
-    G(imdilate(G,strel('square',3))~=G)=0;%取3x3邻域中最大值 判断当前值是否为最大值
+%     [Gx,Gy] = imgradientxy(img);
+%     
+%     Gpow = imgaussfilt((Gx.^2+Gy.^2).^0.5,sigma);
+%     Gsum = (imgaussfilt(Gx,sigma).^2 + imgaussfilt(Gy,sigma).^2).^0.5;
+%     G = Gpow-Gsum;
+%     % 非极大值抑制
+%     % Non-maximum suppression    
+%     G(imdilate(G,strel('square',3))~=G)=0;%取3x3邻域中最大值 判断当前值是否为最大值
     
     img_gauss = imgaussfilt(img, 3);
     [Gx,Gy] = imgradientxy(img_gauss);
