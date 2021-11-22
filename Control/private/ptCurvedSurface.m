@@ -16,7 +16,8 @@ function ptList = ptCurvedSurface(img, ptList, array)
         samplePoints_diry_y=zeros(size(array{it},1)*sample_freq,size(array{it},2));
         count_x = zeros(size(array{it},1),1);
         count_y = zeros(size(array{it},2),1);
-        boundary_x=zeros(size(array{it},2),20);
+        boundary_x=zeros(20,size(array{it},2));
+        boundary_final_x=zeros(10,size(array{it},2));
         for ix = 1 : size(array{it},1)
             for iy = 1 : size(array{it},2)
                 if isnan(array{it}(ix,iy))
@@ -80,28 +81,6 @@ function ptList = ptCurvedSurface(img, ptList, array)
 %                 hold on
 %                 scatter(samplePoints_diry_y,samplePoints_diry_x,10,'g','filled');
 %                 scatter(samplePoints_dirx_y,samplePoints_dirx_x,10,'b','filled');
-                
-                %quadratic curve fitting
-%                 if exist('juncCur1_x','var') && size(juncCur1_x,1) > 4 && size(juncCur2_x,1) > 4
-%                     coeff_1=fit_ellipse(juncCur1_y, juncCur1_x);
-%                     fimplicit(@mfun1,[min(juncCur1_y)-100 max(juncCur1_y)+100 min(juncCur1_x)-100 max(juncCur1_x)+100],'-r','LineWidth',1.5);
-%                     
-%                     coeff_2=fit_ellipse(juncCur2_y, juncCur2_x);
-%                     fimplicit(@mfun2,[min(juncCur2_y)-100 max(juncCur2_y)+100 min(juncCur2_x)-100 max(juncCur2_x)+100],'-y','LineWidth',1.5);
-                    
-                    %solve the intersection points of the two quadratic curves
-%                     syms x y
-%                     eqns = [coeff_1(1)*x^2+coeff_1(2)*x*y+coeff_1(3)*y^2+coeff_1(4)*x+coeff_1(5)*y+1==0, coeff_2(1)*x^2+coeff_2(2)*x*y+coeff_2(3)*y^2+coeff_2(4)*x+coeff_2(5)*y+1==0];
-%                     [solx, soly] = solve(eqns, [x y]);
-%                     solx = real(double(solx));
-%                     soly = real(double(soly));
-%                     err=(solx-ptList(nowPoint,2)).^2+(soly-ptList(nowPoint,1)).^2;
-%                     [~,pos]=min(err);
-%                     x_sub=solx(pos);
-%                     y_sub=soly(pos);
-%                     ptList_refined(nowPoint,:) = [y_sub(1) x_sub(1)];
-%                     scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1);
-%                 end
             end
         end
         for ib=1:size(samplePoints_diry_x,2)
@@ -143,10 +122,60 @@ function ptList = ptCurvedSurface(img, ptList, array)
                     cnt=cnt+1;
                 end
             end
-            boundary_x(cnt,ib)=size(NVF_x,1)+2;
-            hold on
-            scatter(samplePoints_diry_y(boundary_x(boundary_x(:,ib)~=0,ib),ib),samplePoints_diry_x(boundary_x(boundary_x(:,ib)~=0,ib),ib),80,'filled','g');
-        end    
+            for kk=size(samplePoints_diry_y,1):-1:1
+                if samplePoints_diry_y(kk,ib)~=0
+                    boundary_x(cnt,ib)=kk;
+                    break;
+                end
+            end
+        end  
+        for j=1:size(boundary_x,2)
+            boundary_final_x(1,j)=1;
+            k=2;
+            start=2;
+            while k<size(boundary_x,1)
+                if boundary_x(k,j)-boundary_x(start,j)<10 && boundary_x(k,j)-boundary_x(start,j)>=0
+                    k=k+1;
+                else
+                    for l=1:size(boundary_final_x,1)
+                        if boundary_final_x(l,j)==0
+                            boundary_final_x(l,j)=boundary_x(round((k+start-1)/2),j);
+                            start=k;
+                            break;
+                        end
+                    end
+                    continue;
+                end
+            end
+        end
+        
+        %quadratic curve fitting
+        for i=1:size(boundary_final_x,2)
+            for j=1:size(boundary_final_x,1)
+                if boundary_final_x(j+1,i)==0
+                    break;
+                end
+                coeff_1=fit_ellipse(samplePoints_diry_y(boundary_final_x(j,i):boundary_final_x(j+1,i),i), samplePoints_diry_x(boundary_final_x(j,i):boundary_final_x(j+1,i),i));
+                hold on
+                fimplicit(@mfun1,[min(samplePoints_diry_y(boundary_final_x(j,i):boundary_final_x(j+1,i),i))-10 max(samplePoints_diry_y(boundary_final_x(j,i):boundary_final_x(j+1,i),i))+10 min(samplePoints_diry_x(boundary_final_x(j,i):boundary_final_x(j+1,i),i))-10 max(samplePoints_diry_x(boundary_final_x(j,i):boundary_final_x(j+1,i),i))+10],'-r','LineWidth',1.5);
+
+%                 coeff_2=fit_ellipse(juncCur2_y, juncCur2_x);
+%                 fimplicit(@mfun2,[min(juncCur2_y)-100 max(juncCur2_y)+100 min(juncCur2_x)-100 max(juncCur2_x)+100],'-y','LineWidth',1.5);
+% 
+%                 solve the intersection points of the two quadratic curves
+%                 syms x y
+%                 eqns = [coeff_1(1)*x^2+coeff_1(2)*x*y+coeff_1(3)*y^2+coeff_1(4)*x+coeff_1(5)*y+1==0, coeff_2(1)*x^2+coeff_2(2)*x*y+coeff_2(3)*y^2+coeff_2(4)*x+coeff_2(5)*y+1==0];
+%                 [solx, soly] = solve(eqns, [x y]);
+%                 solx = real(double(solx));
+%                 soly = real(double(soly));
+%                 err=(solx-ptList(nowPoint,2)).^2+(soly-ptList(nowPoint,1)).^2;
+%                 [~,pos]=min(err);
+%                 x_sub=solx(pos);
+%                 y_sub=soly(pos);
+%                 ptList_refined(nowPoint,:) = [y_sub(1) x_sub(1)];
+%                 scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1); 
+            end
+        end
     end
 end
 
