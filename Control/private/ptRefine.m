@@ -113,5 +113,8 @@ function [ptList,ledgeList] = ptRefine(img,list,r)
        ptList(it,:) = mean(list(ptIdx==it,:),1);
        ledgeList(it,:) = mean(ledge(ptIdx==it,:),1);
     end
-
+    figure
+    imshow(img);
+    hold on
+    scatter(ptList(:,2),ptList(:,1),30,'filled');
 end

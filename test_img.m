@@ -17,8 +17,8 @@ load 6x18_for3x3_6x2_10x1.mat
 %% 读取一张包含海拉码的图片
 % read an image containing HydraMarker
 % img = im2double(rgb2gray(imread('t1.bmp')));
-img = im2double(rgb2gray(imread('curve_1.jpg')));
-% img = imresize(img,1200/max(size(img,[1,2])));
+img = im2double(rgb2gray(imread('curve_7.jpg')));
+% img = imresize(img,2000/max(size(img,[1,2])));
 
 %% 识别海拉码中的特征点
 % identify the features of HydraMarker

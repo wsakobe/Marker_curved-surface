@@ -3,13 +3,15 @@ function ptList = ptCurvedSurface(img, ptList, array)
     figure;
     imshow(img);
     neighbors = zeros(size(ptList,1),2);
-    sample_width = 20;
+    sample_width = 10;
     sample_freq = 11;
     NVF_x=[];          %normalVectorField
     NVF_y=[];
     global coeff_1
     global coeff_2
     for it = 1 : size(array,1)
+        
+        %Refresh all the variables
         samplePoints_dirx_x=zeros(size(array{it},1),size(array{it},2)*sample_freq);
         samplePoints_diry_x=zeros(size(array{it},1)*sample_freq,size(array{it},2));
         samplePoints_dirx_y=zeros(size(array{it},1),size(array{it},2)*sample_freq);
@@ -18,6 +20,10 @@ function ptList = ptCurvedSurface(img, ptList, array)
         count_y = zeros(size(array{it},2),1);
         boundary_x=zeros(20,size(array{it},2));
         boundary_final_x=zeros(10,size(array{it},2));
+        boundary_y=zeros(size(array{it},1),20);
+        boundary_final_y=zeros(size(array{it},1),10);
+        
+        %Sub-pixel Edge extraction procedure for every block
         for ix = 1 : size(array{it},1)
             for iy = 1 : size(array{it},2)
                 if isnan(array{it}(ix,iy))
@@ -83,6 +89,8 @@ function ptList = ptCurvedSurface(img, ptList, array)
 %                 scatter(samplePoints_dirx_y,samplePoints_dirx_x,10,'b','filled');
             end
         end
+        
+        %Normal Vector Field (NVF) Extraction
         for ib=1:size(samplePoints_diry_x,2)
             for ia=3:size(samplePoints_diry_x,1)-2
                 if samplePoints_diry_x(ia+2,ib)==0 || samplePoints_diry_x(ia-2,ib)==0 
@@ -113,11 +121,13 @@ function ptList = ptCurvedSurface(img, ptList, array)
                 NVF_y(ia,ib).norm=sqrt(u^2+v^2);
             end
         end
+        
+        %Demarcation point detection & Near point collapse
         for ib = 1:size(NVF_x,2)
             boundary_x(1,ib)=1;
             cnt=2;
             for ia = 6:size(NVF_x,1)-5
-                if ~isempty(NVF_x(ia,ib).dir) && NVF_x(ia,ib).norm < 35 && (abs(NVF_x(ia,ib).dir-NVF_x(ia+1,ib).dir)>150 || abs(NVF_x(ia,ib).dir-NVF_x(ia-1,ib).dir)>150) && judgeBoundary(NVF_x(ia-5:ia+5,ib),5)
+                if ~isempty(NVF_x(ia+1,ib).dir) && NVF_x(ia,ib).norm < 35 && (abs(NVF_x(ia,ib).dir-NVF_x(ia+1,ib).dir)>150 || abs(NVF_x(ia,ib).dir-NVF_x(ia-1,ib).dir)>150) && judgeBoundary(NVF_x(ia-5:ia+5,ib),5)
                     boundary_x(cnt,ib)=ia;
                     cnt=cnt+1;
                 end
@@ -149,6 +159,43 @@ function ptList = ptCurvedSurface(img, ptList, array)
             end
         end
         
+        for ia = 1:size(NVF_y,1)
+            boundary_y(ia,1)=1;
+            cnt=2;
+            for ib = 6:size(NVF_y,2)-5
+                if ~isempty(NVF_y(ia,ib+1).dir) && NVF_y(ia,ib).norm < 35 && (abs(NVF_y(ia,ib).dir-NVF_y(ia,ib+1).dir)>150 || abs(NVF_y(ia,ib).dir-NVF_y(ia,ib-1).dir)>150) && judgeBoundary(NVF_y(ia,ib-5:ib+5),5)
+                    boundary_y(ia,cnt)=ib;
+                    cnt=cnt+1;
+                end
+            end
+            for kk=size(samplePoints_dirx_y,2):-1:1
+                if samplePoints_dirx_x(ia,kk)~=0
+                    boundary_y(ia,cnt)=kk;
+                    break;
+                end
+            end
+        end  
+        for j=1:size(boundary_y,1)
+            boundary_final_y(j,1)=1;
+            k=3;
+            start=2;
+            while k<size(boundary_y,2)
+                if boundary_y(j,k)-boundary_y(j,k-1)<5 && boundary_y(j,k)-boundary_y(j,start)>=0
+                    k=k+1;
+                else
+                    for l=1:size(boundary_final_y,2)
+                        if boundary_final_y(j,l)==0
+                            boundary_final_y(j,l)=boundary_y(j,round((k+start-1)/2));
+                            start=k;
+                            break;
+                        end
+                    end
+                    k=k+1;
+                    continue;
+                end
+            end
+        end
+        
         %quadratic curve fitting
         for i=1:size(boundary_final_x,2)
             for j=1:size(boundary_final_x,1)
@@ -158,9 +205,18 @@ function ptList = ptCurvedSurface(img, ptList, array)
                 coeff_1=fit_ellipse(samplePoints_diry_y(boundary_final_x(j,i):boundary_final_x(j+1,i),i), samplePoints_diry_x(boundary_final_x(j,i):boundary_final_x(j+1,i),i));
                 hold on
                 fimplicit(@mfun1,[min(samplePoints_diry_y(boundary_final_x(j,i):boundary_final_x(j+1,i),i))-10 max(samplePoints_diry_y(boundary_final_x(j,i):boundary_final_x(j+1,i),i))+10 min(samplePoints_diry_x(boundary_final_x(j,i):boundary_final_x(j+1,i),i))-10 max(samplePoints_diry_x(boundary_final_x(j,i):boundary_final_x(j+1,i),i))+10],'-r','LineWidth',1.5);
-
-%                 coeff_2=fit_ellipse(juncCur2_y, juncCur2_x);
-%                 fimplicit(@mfun2,[min(juncCur2_y)-100 max(juncCur2_y)+100 min(juncCur2_x)-100 max(juncCur2_x)+100],'-y','LineWidth',1.5);
+            end
+        end
+        
+        for i=1:size(boundary_final_y,1)
+            for j=1:size(boundary_final_y,2)
+                if boundary_final_x(i,j+1)==0
+                    break;
+                end
+                coeff_2=fit_ellipse(samplePoints_dirx_y(i,boundary_final_y(i,j):boundary_final_y(i,j+1))', samplePoints_dirx_x(i,boundary_final_y(i,j):boundary_final_y(i,j+1))');
+                fimplicit(@mfun2,[min(samplePoints_dirx_y(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))-10 max(samplePoints_dirx_y(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))+10 min(samplePoints_dirx_x(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))-10 max(samplePoints_dirx_x(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))+10],'-y','LineWidth',1.5);
+            end
+        end
 % 
 %                 solve the intersection points of the two quadratic curves
 %                 syms x y
@@ -174,8 +230,6 @@ function ptList = ptCurvedSurface(img, ptList, array)
 %                 y_sub=soly(pos);
 %                 ptList_refined(nowPoint,:) = [y_sub(1) x_sub(1)];
 %                 scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1); 
-            end
-        end
     end
 end
 
