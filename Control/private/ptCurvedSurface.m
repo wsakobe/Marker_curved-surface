@@ -210,7 +210,7 @@ function ptList = ptCurvedSurface(img, ptList, array)
         
         for i=1:size(boundary_final_y,1)
             for j=1:size(boundary_final_y,2)
-                if boundary_final_x(i,j+1)==0
+                if boundary_final_y(i,j+1)==0
                     break;
                 end
                 coeff_2=fit_ellipse(samplePoints_dirx_y(i,boundary_final_y(i,j):boundary_final_y(i,j+1))', samplePoints_dirx_x(i,boundary_final_y(i,j):boundary_final_y(i,j+1))');

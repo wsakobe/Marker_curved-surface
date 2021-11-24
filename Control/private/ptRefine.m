@@ -92,8 +92,8 @@ function [ptList,ledgeList] = ptRefine(img,list,r)
     % Remove the detected points with ledges less than 2, low correlation
     % score or sharp included angle.
     idx = isnan(ledge(:,1)) ...
-        | corr < max(corr)-0.38 ...
-        | angBias > 30;
+        | corr < max(corr)-0.3 ...
+        | angBias > 20;
     list(idx,:) = [];
     ledge(idx,:) = [];
 
