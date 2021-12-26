@@ -16,8 +16,11 @@ load 6x18_for3x3_6x2_10x1.mat
 
 %% 读取一张包含海拉码的图片
 % read an image containing HydraMarker
-% img = im2double(rgb2gray(imread('t1.bmp')));
-img = im2double((imread('.\Experiment\SyntheticCorner\RandomCornerNoise\Noise0.001\1.bmp')));
+% img = im2double(rgb2gray(imread('curve_6.jpg')));
+img = im2double((imread('F:\Marker_curved-surface\Experiment\SyntheticCorner\RandomCornerNoise\Noise0.003\4.bmp')));
+img_min = min(img(:));
+img_max = max(img(:));
+img     = (img-img_min)/(img_max-img_min);
 % img = imresize(img,2000/max(size(img,[1,2])));
 
 %% 识别海拉码中的特征点

@@ -2,6 +2,7 @@
 function ptList = ptCurvedSurface(img, ptList, array)
     figure;
     imshow(img);
+    hold on
     neighbors = zeros(size(ptList,1),2);
     sample_width = 10;
     sample_freq = 11;
@@ -10,7 +11,6 @@ function ptList = ptCurvedSurface(img, ptList, array)
     global coeff_1
     global coeff_2
     for it = 1 : size(array,1)
-        
         %Refresh all the variables
         samplePoints_dirx_x=zeros(size(array{it},1),size(array{it},2)*sample_freq);
         samplePoints_diry_x=zeros(size(array{it},1)*sample_freq,size(array{it},2));
@@ -75,18 +75,18 @@ function ptList = ptCurvedSurface(img, ptList, array)
                 end
                 
                 if ~isempty(juncCur2_x)
-                    samplePoints_dirx_x(ix, count_x(ix)+1:count_x(ix)+size(juncCur2_x,1)+1)=[ptList(nowPoint,1);juncCur2_x];
-                    samplePoints_dirx_y(ix, count_x(ix)+1:count_x(ix)+size(juncCur2_x,1)+1)=[ptList(nowPoint,2);juncCur2_y];
-                    count_x(ix)=count_x(ix)+size(juncCur2_x,1)+1;
+                    samplePoints_dirx_x(ix, count_x(ix)+1:count_x(ix)+size(juncCur2_x,1))=juncCur2_x;
+                    samplePoints_dirx_y(ix, count_x(ix)+1:count_x(ix)+size(juncCur2_x,1))=juncCur2_y;
+                    count_x(ix)=count_x(ix)+size(juncCur2_x,1);
                 end
                 if ~isempty(juncCur1_x)
-                    samplePoints_diry_x(count_y(iy)+1:count_y(iy)+size(juncCur1_x,1)+1, iy)=[ptList(nowPoint,1);juncCur1_x];
-                    samplePoints_diry_y(count_y(iy)+1:count_y(iy)+size(juncCur1_x,1)+1, iy)=[ptList(nowPoint,2);juncCur1_y];
-                    count_y(iy)=count_y(iy)+size(juncCur1_x,1)+1;
+                    samplePoints_diry_x(count_y(iy)+1:count_y(iy)+size(juncCur1_x,1), iy)=juncCur1_x;
+                    samplePoints_diry_y(count_y(iy)+1:count_y(iy)+size(juncCur1_x,1), iy)=juncCur1_y;
+                    count_y(iy)=count_y(iy)+size(juncCur1_x,1);
                 end
-%                 hold on
-%                 scatter(samplePoints_diry_y,samplePoints_diry_x,10,'g','filled');
-%                 scatter(samplePoints_dirx_y,samplePoints_dirx_x,10,'b','filled');
+                hold on
+                scatter(samplePoints_diry_y,samplePoints_diry_x,10,'g','filled');
+                scatter(samplePoints_dirx_y,samplePoints_dirx_x,10,'b','filled');
             end
         end
         
@@ -99,9 +99,10 @@ function ptList = ptCurvedSurface(img, ptList, array)
                 slope=(samplePoints_diry_x(ia+2,ib)-samplePoints_diry_x(ia-2,ib))/(samplePoints_diry_y(ia+2,ib)-samplePoints_diry_y(ia-2,ib));
                 theta=atan(slope);
                 len=((samplePoints_diry_y(ia,ib)-samplePoints_diry_y(ia-2,ib))/(samplePoints_diry_y(ia+2,ib)-samplePoints_diry_y(ia-2,ib)))*(samplePoints_diry_x(ia+2,ib)-samplePoints_diry_x(ia-2,ib))+samplePoints_diry_x(ia-2,ib)-samplePoints_diry_x(ia,ib);
-                u=len*sin(theta)*cos(theta)*50;
-                v=len*cos(theta)*cos(theta)*50;
-%                 quiver(samplePoints_diry_y(ia,ib),samplePoints_diry_x(ia,ib),-u,v,'-r','LineWidth',1.5);
+                base_len=sqrt((samplePoints_diry_x(ia+2,ib)-samplePoints_diry_x(ia-2,ib))^2+(samplePoints_diry_y(ia+2,ib)-samplePoints_diry_y(ia-2,ib))^2);
+                u=len*sin(theta)*cos(theta)*1000/base_len;
+                v=len*cos(theta)*cos(theta)*1000/base_len;
+                quiver(samplePoints_diry_y(ia,ib),samplePoints_diry_x(ia,ib),-u,v,'-r','LineWidth',1.5);
                 NVF_x(ia,ib).dir=atan2(v,-u)/pi*180;
                 NVF_x(ia,ib).norm=sqrt(u^2+v^2);
             end
@@ -114,9 +115,10 @@ function ptList = ptCurvedSurface(img, ptList, array)
                 slope=(samplePoints_dirx_x(ia,ib+2)-samplePoints_dirx_x(ia,ib-2))/(samplePoints_dirx_y(ia,ib+2)-samplePoints_dirx_y(ia,ib-2));
                 theta=atan(slope);
                 len=((samplePoints_dirx_y(ia,ib)-samplePoints_dirx_y(ia,ib-2))/(samplePoints_dirx_y(ia,ib+2)-samplePoints_dirx_y(ia,ib-2)))*(samplePoints_dirx_x(ia,ib+2)-samplePoints_dirx_x(ia,ib-2))+samplePoints_dirx_x(ia,ib-2)-samplePoints_dirx_x(ia,ib);
-                u=len*sin(theta)*cos(theta)*50;
-                v=len*cos(theta)*cos(theta)*50;
-%                 quiver(samplePoints_dirx_y(ia,ib),samplePoints_dirx_x(ia,ib),-u,v,'-y','LineWidth',1.5);
+                base_len=sqrt((samplePoints_dirx_x(ia,ib+2)-samplePoints_dirx_x(ia,ib-2))^2+(samplePoints_dirx_y(ia,ib+2)-samplePoints_dirx_y(ia,ib-2))^2);
+                u=len*sin(theta)*cos(theta)*1000/base_len;
+                v=len*cos(theta)*cos(theta)*1000/base_len;
+                quiver(samplePoints_dirx_y(ia,ib),samplePoints_dirx_x(ia,ib),-u,v,'-y','LineWidth',1.5);
                 NVF_y(ia,ib).dir=atan2(v,-u)/pi*180;
                 NVF_y(ia,ib).norm=sqrt(u^2+v^2);
             end
@@ -217,19 +219,19 @@ function ptList = ptCurvedSurface(img, ptList, array)
                 fimplicit(@mfun2,[min(samplePoints_dirx_y(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))-10 max(samplePoints_dirx_y(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))+10 min(samplePoints_dirx_x(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))-10 max(samplePoints_dirx_x(i,boundary_final_y(i,j):boundary_final_y(i,j+1)))+10],'-y','LineWidth',1.5);
             end
         end
-% 
-%                 solve the intersection points of the two quadratic curves
-%                 syms x y
-%                 eqns = [coeff_1(1)*x^2+coeff_1(2)*x*y+coeff_1(3)*y^2+coeff_1(4)*x+coeff_1(5)*y+1==0, coeff_2(1)*x^2+coeff_2(2)*x*y+coeff_2(3)*y^2+coeff_2(4)*x+coeff_2(5)*y+1==0];
-%                 [solx, soly] = solve(eqns, [x y]);
-%                 solx = real(double(solx));
-%                 soly = real(double(soly));
-%                 err=(solx-ptList(nowPoint,2)).^2+(soly-ptList(nowPoint,1)).^2;
-%                 [~,pos]=min(err);
-%                 x_sub=solx(pos);
-%                 y_sub=soly(pos);
-%                 ptList_refined(nowPoint,:) = [y_sub(1) x_sub(1)];
-%                 scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1); 
+
+%         solve the intersection points of the two quadratic curves
+        syms x y
+        eqns = [coeff_1(1)*x^2+coeff_1(2)*x*y+coeff_1(3)*y^2+coeff_1(4)*x+coeff_1(5)*y+coeff_1(6)==0, coeff_2(1)*x^2+coeff_2(2)*x*y+coeff_2(3)*y^2+coeff_2(4)*x+coeff_2(5)*y+coeff_2(6)==0];
+        [solx, soly] = solve(eqns, [x y]);
+        solx = real(double(solx));
+        soly = real(double(soly));
+        err=(solx-ptList(nowPoint,2)).^2+(soly-ptList(nowPoint,1)).^2;
+        [~,pos]=min(err);
+        x_sub=solx(pos)
+        y_sub=soly(pos)
+        ptList_refined(nowPoint,:) = [y_sub(1) x_sub(1)];
+        scatter(x_sub(1), y_sub(1), 30,'r','filled','o','LineWidth',1); 
     end
 end
 

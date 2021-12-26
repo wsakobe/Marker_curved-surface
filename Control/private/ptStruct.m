@@ -24,10 +24,10 @@ function [array,E] = ptStruct(img,ptList,ledge)
     E = edges(triangulation(cnt,pts));
     E_unmatched = false(size(E,1),1);
     
-    figure
-    imshow(img);
-    hold on
-    triplot(triangulation(cnt,pts),'LineWidth',2,'Color','y');
+%     figure
+%     imshow(img);
+%     hold on
+%     triplot(triangulation(cnt,pts),'LineWidth',2,'Color','y');
     
     for e = 1 : size(E,1)
         ledge_A = deg2rad(ledge(E(e,1),:));
@@ -51,7 +51,7 @@ function [array,E] = ptStruct(img,ptList,ledge)
                             abs(angdiff(dirB,ledge_B(2)+pi))]);
         % 贴合角度不低于15°
         % the included angle should not be larger than 15°
-        min_rad = deg2rad(25);
+        min_rad = deg2rad(35);
         if ledge_diff > min_rad || ledge_A_diff > min_rad || ledge_B_diff >min_rad
            E_unmatched(e) = true;
         end

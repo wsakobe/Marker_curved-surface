@@ -40,6 +40,10 @@ function [ptList,ledgeList] = ptRefine(img,list,r)
         illegal = (any(list<r+2,2) | list(:,1)>size(img,1)-r-2 | list(:,2)>size(img,2)-r-2);
         list(illegal,:)=[];
 %     end
+%     figure
+%     imshow(img);
+%     hold on
+%     scatter(list(:,2),list(:,1),'filled');
 
     % 基于超平面模型（二元二次方程）计算脊的朝向
     % 基于脊的朝向生成标准模板, 计算相关度以排除假阳性检测
@@ -92,7 +96,7 @@ function [ptList,ledgeList] = ptRefine(img,list,r)
     % Remove the detected points with ledges less than 2, low correlation
     % score or sharp included angle.
     idx = isnan(ledge(:,1)) ...
-        | corr < max(corr)-0.3 ...
+        | corr < max(corr)-0.3...
         | angBias > 20;
     list(idx,:) = [];
     ledge(idx,:) = [];
@@ -113,8 +117,8 @@ function [ptList,ledgeList] = ptRefine(img,list,r)
        ptList(it,:) = mean(list(ptIdx==it,:),1);
        ledgeList(it,:) = mean(ledge(ptIdx==it,:),1);
     end
-    figure
-    imshow(img);
-    hold on
-    scatter(ptList(:,2),ptList(:,1),30,'filled');
+%     figure
+%     imshow(img);
+%     hold on
+%     scatter(ptList(:,2),ptList(:,1),30,'filled');
 end
